@@ -1,0 +1,21 @@
+# Environments
+venv/
+env/
+.env
+.venv/
+
+# Pytest and Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Explicitly ensure the output directory and its generated artifacts are tracked
+!output/

@@ -1,0 +1,62 @@
+**WORKFLOW: Login → Machines → Library → Create Library Image**
+
+**PRECONDITIONS:**
+
+* User is not logged in
+* User is on login page
+* Application URL is accessible
+
+---
+
+**STEPS WITH ASSERTS:**
+
+1. Open URL http://fresh-install-testsetup-main.corp.coriolis.in/
+   → Assert page is opened
+
+2. Wait for login page
+   → Assert login page is visible
+
+3. Enter username: `colama`
+   → Assert username field contains value
+
+4. Enter password: `Eigen@25032026`
+   → Assert password field contains value
+
+5. Click "Login"
+   → Assert login button click is successful
+
+6. Wait for navigation
+   → Assert navigation completed (URL or page change)
+
+7. Wait for "Machines"
+   → Assert "Machines" is visible
+
+8. Click "Groups & Users"
+   → Assert click action successful
+
+9. Wait for "Groups & Users"
+   → Assert "Groups & Users" page is visible
+
+10. Click on "Add New"
+    → Assert button click successful
+
+11. Wait for "Create New Group" wizard
+
+12. Enter custom Group Name
+
+13  Select any Deployment Strategy from Dropdown
+
+14. Click on create button
+
+15. Wait for Completion
+
+16. Change Scope filter from My to All
+
+17. Assert Group present in the list using the custom name
+---
+
+**EXPECTED RESULT:**
+
+* Login successful
+* Library page opened
+* Image created with name `test-test`

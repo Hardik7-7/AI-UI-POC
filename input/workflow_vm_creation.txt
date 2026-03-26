@@ -1,0 +1,118 @@
+**WORKFLOW: Login → Machines → Library → Create Library Image**
+
+**PRECONDITIONS:**
+
+* User is not logged in
+* User is on login page
+* Application URL is accessible
+
+---
+
+**STEPS WITH ASSERTS:**
+
+1. Open URL http://fresh-test.corp.coriolis.in/
+   → Assert page is opened
+
+2. Wait for login page
+   → Assert login page is visible
+
+3. Enter username: `colama`
+   → Assert username field contains value
+
+4. Enter password: `coriolis`
+   → Assert password field contains value
+
+5. Click "Login"
+   → Assert login button click is successful
+
+6. Wait for navigation
+   → Assert navigation completed (URL or page change)
+
+7. Wait for "Machines"
+   → Assert "Machines" is visible
+
+8. Click "Library"
+   → Assert click action successful
+
+9. Wait for "Library"
+   → Assert Library page is visible
+
+10. Click "Add New"
+    → Assert button click successful
+
+11. Wait for "Provide Basic Details"
+    → Assert section is visible
+
+12. Enter custom name
+    → Assert name field contains value
+
+13. Click "Next"
+    → Assert moved to next step
+
+14. Wait for "Hardware Details"
+    → Assert section is visible
+
+15. Click "Next"
+    → Assert moved to next step
+
+16. Wait for "Disks Details"
+    → Assert section is visible
+
+17. Click "Next"
+    → Assert moved to next step
+
+18. Wait for "CD-ROM Details"
+    → Assert section is visible
+
+19. Click "Next"
+    → Assert moved to next step
+
+20. Wait for "Network Details"
+    → Assert section is visible
+
+21. Click "Next"
+    → Assert moved to next step
+
+22. Wait for "Serial Port Details"
+    → Assert section is visible
+
+23. Click "Save"
+    → Assert save action triggered
+
+24. Wait for completion
+    → Assert image creation success (e.g., success message / presence in list)
+
+25. Locate created image custom name in Library list
+→ Assert image is present in list
+
+26. Click "Deploy" (rocket icon for custom name)
+→ Assert deploy form is opened
+
+27. Wait for "Deploy" form/modal
+→ Assert deploy form is visible
+
+28. Enter machine name: custom-name-deploy
+→ Assert name field contains value
+
+29. Scroll down to "Deploy" button
+→ Assert button is visible
+
+30. Click "Deploy"
+→ Assert deploy action triggered
+
+31. Wait for completion
+
+32. Click "Machines"
+   → Assert click action successful
+
+33. Wait for "Machines"
+   → Assert Machines page is visible
+
+34. Wait for our deployment to reach "Stopped" state
+---
+
+**EXPECTED RESULT:**
+
+* Login successful
+* Library page opened
+* Image created with name `custom-name`
