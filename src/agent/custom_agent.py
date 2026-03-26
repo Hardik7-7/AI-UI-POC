@@ -126,8 +126,9 @@ Always respond with valid JSON ONLY. No markdown formatting like ```json.''')
 
             # 3. Call Gemini
             response = await self.llm.ainvoke(messages)
-            # ChatGoogle returns ChatInvokeCompletion, not AIMessage — use .completion
-            raw_text = response.completion.strip()
+            
+            # Standard Langchain AIMessage uses .content
+            raw_text = getattr(response, "content", getattr(response, "completion", "")).strip()
             if raw_text.startswith("```json"):
                 raw_text = raw_text[7:-3].strip()
             elif raw_text.startswith("```"):

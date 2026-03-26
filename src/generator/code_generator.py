@@ -37,12 +37,12 @@ class CodeGenerator:
             "import os",
             "from playwright.async_api import async_playwright",
             "from src.agent.custom_agent import CustomAgent",
-            "from browser_use.llm.google.chat import ChatGoogle",
+            "from langchain_google_genai import ChatGoogleGenerativeAI",
             "",
             "@pytest.fixture",
             "def llm():",
             "    # We initialize the Gemini LLM",
-            "    return ChatGoogle(model='gemini-2.5-flash', temperature=0.1)",
+            "    return ChatGoogleGenerativeAI(model='gemini-2.5-flash', temperature=0.1)",
             ""
         ]
 
