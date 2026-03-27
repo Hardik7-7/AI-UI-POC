@@ -91,6 +91,12 @@ def cmd_generate_scenarios(args):
     print("\nNext: review the JSON files, then run:")
     print(f"  python src/runner/cli.py generate-code --scenarios-dir {SCENARIOS_DIR} --output-dir {TESTS_DIR}")
 
+    # Open the UI dashboard to signal scenario generation is complete
+    import webbrowser
+    dashboard_url = os.getenv("PIPELINE_DONE_URL", "http://172.21.51.162:4173/?type=ui")
+    print(f"\n🌐 Opening dashboard: {dashboard_url}")
+    webbrowser.open(dashboard_url)
+
 
 # ---------------------------------------------------------------------------
 # Subcommand: generate-code
@@ -361,12 +367,6 @@ def cmd_publish_tests(args):
         shutil.rmtree(clone_dir, ignore_errors=True)
 
     print("\n🎉 PIPELINE COMPLETE! Tests are live on the remote repository.")
-
-    # Open the UI dashboard to signal pipeline completion
-    import webbrowser
-    dashboard_url = os.getenv("PIPELINE_DONE_URL", "http://172.21.51.162:4173/?type=ui")
-    print(f"\n🌐 Opening dashboard: {dashboard_url}")
-    webbrowser.open(dashboard_url)
 
 
 # ---------------------------------------------------------------------------
