@@ -9,13 +9,15 @@ def write_deterministic_script(script_history: list, output_path: str, func_name
     """Write a clean, self-contained Playwright test file from a list of script lines."""
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     lines = [
+        "import os",
         "import pytest",
         "from playwright.async_api import async_playwright",
         "",
         "@pytest.mark.asyncio",
         f"async def {func_name}():",
         "    async with async_playwright() as p:",
-        "        browser = await p.chromium.launch(headless=False, args=['--start-maximized'])",
+        "        is_headless = os.getenv('HEADLESS', 'true').lower() == 'true'",
+        "        browser = await p.chromium.launch(headless=is_headless, args=['--start-maximized'] if not is_headless else [])",
         "        context = await browser.new_context(no_viewport=True)",
         "        page = await context.new_page()",
         "",

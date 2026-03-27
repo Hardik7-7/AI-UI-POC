@@ -253,21 +253,89 @@ def cmd_self_heal(args):
 
 
 def cmd_publish_tests(args):
-    """Consolidated pipeline: Generate Code -> Run AI Tests -> Self-Heal Deterministic"""
+    """Consolidated pipeline: Generate Code -> Run AI Tests -> Self-Heal -> Git Push"""
+    import shutil
+
     print("\n" + "*"*70)
     print("🚀 STARTING E2E AUTOMATION PUBLISH PIPELINE")
     print("*"*70)
-    
-    print("\n[Stage 1/3] Generating AI test wrappers from approved JSON scenarios...")
+
+    print("\n[Stage 1/4] Generating AI test wrappers from approved JSON scenarios...")
     cmd_generate_code(args)
-    
-    print("\n[Stage 2/3] Executing AI tests to generate deterministic Playwright scripts...")
+
+    print("\n[Stage 2/4] Executing AI tests to generate deterministic Playwright scripts...")
     cmd_run_all(args)
-    
-    print("\n[Stage 3/3] Running fast regression on deterministic scripts (with self-healing framework)...")
+
+    print("\n[Stage 3/4] Running fast regression on deterministic scripts (with self-healing)...")
     cmd_self_heal(args)
-    
-    print("\n✅ PIPELINE COMPLETE! Deterministic tests are ready for CI/CD or Git Push.")
+
+    # ---------- Stage 4: Git Push ----------
+    print("\n[Stage 4/4] Pushing deterministic tests to remote repository...")
+
+    remote_url = os.getenv(
+        "GIT_REMOTE_URL",
+        "git@gitlab.corp.coriolis.in:eigen/eigenserv/colama-ui.git"
+    )
+    target_branch = os.getenv("GIT_TARGET_BRANCH", "ui-tests")
+    det_dir = os.path.join("output", "deterministic")
+    clone_dir = os.path.join("output", "_repo_clone")
+
+    # Clone or reuse an existing clone
+    if not os.path.exists(os.path.join(clone_dir, ".git")):
+        print(f"  Cloning {remote_url} ...")
+        result = subprocess.run(
+            ["git", "clone", remote_url, clone_dir],
+            cwd=os.getcwd()
+        )
+        if result.returncode != 0:
+            print("❌ Git clone failed. Check your SSH key and remote URL.")
+            sys.exit(1)
+    else:
+        print("  Reusing existing clone — pulling latest...")
+        subprocess.run(["git", "fetch", "--all"], cwd=clone_dir)
+
+    # Checkout (or create) the target branch
+    subprocess.run(["git", "checkout", "-B", target_branch], cwd=clone_dir)
+    subprocess.run(
+        ["git", "pull", "origin", target_branch, "--rebase"],
+        cwd=clone_dir
+    )
+
+    # Copy deterministic tests into ui_tests/ folder inside the repo
+    dest_tests_dir = os.path.join(clone_dir, "ui-playwright-tests")
+    os.makedirs(dest_tests_dir, exist_ok=True)
+
+    det_files = [f for f in os.listdir(det_dir) if f.endswith("_det.py")]
+    if not det_files:
+        print("  No deterministic tests found to push.")
+        return
+
+    for f in det_files:
+        shutil.copy2(os.path.join(det_dir, f), os.path.join(dest_tests_dir, f))
+        print(f"  📄 Copied {f}")
+
+    # Stage, commit, and push
+    subprocess.run(["git", "add", "ui_tests/"], cwd=clone_dir)
+
+    commit_result = subprocess.run(
+        ["git", "commit", "-m", f"[Auto] Update UI deterministic tests ({len(det_files)} file(s))"],
+        cwd=clone_dir
+    )
+
+    if commit_result.returncode == 0:
+        push_result = subprocess.run(
+            ["git", "push", "origin", target_branch],
+            cwd=clone_dir
+        )
+        if push_result.returncode == 0:
+            print(f"\n✅ Successfully pushed {len(det_files)} test(s) to '{target_branch}' on {remote_url}")
+        else:
+            print("❌ Git push failed. Check SSH access and branch protections.")
+            sys.exit(1)
+    else:
+        print("  ℹ️  Nothing new to commit — tests are already up to date.")
+
+    print("\n🎉 PIPELINE COMPLETE! Tests are live on the remote repository.")
 
 
 # ---------------------------------------------------------------------------

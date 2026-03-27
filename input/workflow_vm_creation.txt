@@ -43,7 +43,7 @@
 11. Wait for "Provide Basic Details"
     → Assert section is visible
 
-12. Enter custom name
+12. Enter custom name which must be relevant to the testcase and starts with test_ui
     → Assert name field contains value
 
 13. Click "Next"
