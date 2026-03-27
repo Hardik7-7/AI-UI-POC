@@ -189,7 +189,7 @@ def cmd_self_heal(args):
     """Run deterministic tests and fallback to AI test for self-healing if they fail."""
     det_dir = os.path.join("output", "deterministic")
     ai_dir = os.path.join("output", "generated_tests")
-    
+
     if not os.path.exists(det_dir):
         print(f"Directory {det_dir} not found. Run generate-code and run-all first.")
         sys.exit(1)
@@ -200,13 +200,13 @@ def cmd_self_heal(args):
         sys.exit(1)
 
     print(f"\n[self-heal] Starting fast regression pass on {len(det_files)} deterministic tests...")
-    
+
     failed_tests = []
     for test_file in det_files:
         path = os.path.join(det_dir, test_file)
         print(f"\n--- Running fast target: {test_file} ---")
         result = subprocess.run([sys.executable, "-m", "pytest", path, "-q"], cwd=os.getcwd())
-        
+
         if result.returncode != 0:
             print(f"❌ Deterministic test failed: {test_file}")
             failed_tests.append(test_file)
@@ -223,7 +223,7 @@ def cmd_self_heal(args):
     for failed_file in failed_tests:
         # e.g., 'test_verify_login_0_det.py' -> 'test_verify_login_0'
         func_name = failed_file.replace("_det.py", "")
-        
+
         # Search for which AI test file contains this function
         ai_target_file = None
         for ai_file in os.listdir(ai_dir):
@@ -232,7 +232,7 @@ def cmd_self_heal(args):
                     if f"def {func_name}(" in f.read():
                         ai_target_file = ai_file
                         break
-        
+
         if not ai_target_file:
             print(f"Could not find source AI test for {func_name} to heal it.")
             continue
@@ -240,12 +240,12 @@ def cmd_self_heal(args):
         ai_target_path = os.path.join(ai_dir, ai_target_file)
         print(f"\n🔄 Self-Healing triggered for {func_name} (via {ai_target_file})")
         print("Launching CustomAgent with dom.js to find the new UI elements...")
-        
+
         heal_result = subprocess.run(
             [sys.executable, "-m", "pytest", f"{ai_target_path}::{func_name}", "-v", "-s"],
             cwd=os.getcwd()
         )
-        
+
         if heal_result.returncode == 0:
             print(f"✅ Successfully healed {failed_file}! New deterministic script saved.")
         else:
@@ -253,24 +253,42 @@ def cmd_self_heal(args):
 
 
 def cmd_publish_tests(args):
-    """Consolidated pipeline: Generate Code -> Run AI Tests -> Self-Heal -> Git Push"""
+    """Consolidated pipeline: Cleanup -> Generate Code -> Run AI Tests -> Self-Heal -> Git Push"""
     import shutil
 
     print("\n" + "*"*70)
     print("🚀 STARTING E2E AUTOMATION PUBLISH PIPELINE")
     print("*"*70)
 
-    print("\n[Stage 1/4] Generating AI test wrappers from approved JSON scenarios...")
+    # ---------- Stage 0: Cleanup previous test data ----------
+    print("\n[Stage 0/5] Cleaning up previous test data from server...")
+    cleanup_script = os.path.join("src", "cleanup-script.py")
+    cleanup_args = [
+        sys.executable, cleanup_script,
+        "--base-url",  os.getenv("CLEANUP_BASE_URL",  "http://fresh-test.corp.coriolis.in"),
+        "--username",  os.getenv("CLEANUP_USERNAME",  "colama"),
+        "--password",  os.getenv("CLEANUP_PASSWORD",  "coriolis"),
+        "--prefix",    os.getenv("CLEANUP_PREFIX",     "test_ui"),
+        "--force-delete",
+        "--lib-delete",
+    ]
+    cleanup_result = subprocess.run(cleanup_args, cwd=os.getcwd())
+    if cleanup_result.returncode != 0:
+        print("⚠️  Cleanup script returned a non-zero exit code. Proceeding anyway...")
+    else:
+        print("✅ Server cleanup complete.")
+
+    print("\n[Stage 1/5] Generating AI test wrappers from approved JSON scenarios...")
     cmd_generate_code(args)
 
-    print("\n[Stage 2/4] Executing AI tests to generate deterministic Playwright scripts...")
+    print("\n[Stage 2/5] Executing AI tests to generate deterministic Playwright scripts...")
     cmd_run_all(args)
 
-    print("\n[Stage 3/4] Running fast regression on deterministic scripts (with self-healing)...")
+    print("\n[Stage 3/5] Running fast regression on deterministic scripts (with self-healing)...")
     cmd_self_heal(args)
 
-    # ---------- Stage 4: Git Push ----------
-    print("\n[Stage 4/4] Pushing deterministic tests to remote repository...")
+    # ---------- Stage 4/5: Git Push ----------
+    print("\n[Stage 4/5] Pushing deterministic tests to remote repository...")
 
     remote_url = os.getenv(
         "GIT_REMOTE_URL",
@@ -344,6 +362,12 @@ def cmd_publish_tests(args):
 
     print("\n🎉 PIPELINE COMPLETE! Tests are live on the remote repository.")
 
+    # Open the UI dashboard to signal pipeline completion
+    import webbrowser
+    dashboard_url = os.getenv("PIPELINE_DONE_URL", "http://172.21.51.162:4173/?type=ui")
+    print(f"\n🌐 Opening dashboard: {dashboard_url}")
+    webbrowser.open(dashboard_url)
+
 
 # ---------------------------------------------------------------------------
 # main()
@@ -402,7 +426,7 @@ Examples:
     # Re-map arguments for subcommands when using publish-tests
     if args.command == "publish-tests":
         args.test_dir = TESTS_DIR  # Required for run-all
-        
+
     if args.command == "generate-scenarios":
         cmd_generate_scenarios(args)
     elif args.command == "generate-code":
