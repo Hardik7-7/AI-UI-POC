@@ -317,6 +317,10 @@ def cmd_publish_tests(args):
     # Stage, commit, and push
     subprocess.run(["git", "add", "ui-playwright-tests/"], cwd=clone_dir)
 
+    # Set git identity
+    subprocess.run(["git", "config", "--global", "user.name",  "Hardik Singh"],        cwd=clone_dir)
+    subprocess.run(["git", "config", "--global", "user.email", "hardikk@example.com"], cwd=clone_dir)
+
     commit_result = subprocess.run(
         ["git", "commit", "-m", f"[Auto] Update UI deterministic tests ({len(det_files)} file(s))"],
         cwd=clone_dir
