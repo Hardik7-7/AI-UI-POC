@@ -315,7 +315,7 @@ def cmd_publish_tests(args):
         print(f"  📄 Copied {f}")
 
     # Stage, commit, and push
-    subprocess.run(["git", "add", "ui_tests/"], cwd=clone_dir)
+    subprocess.run(["git", "add", "ui-playwright-tests/"], cwd=clone_dir)
 
     commit_result = subprocess.run(
         ["git", "commit", "-m", f"[Auto] Update UI deterministic tests ({len(det_files)} file(s))"],
@@ -329,11 +329,14 @@ def cmd_publish_tests(args):
         )
         if push_result.returncode == 0:
             print(f"\n✅ Successfully pushed {len(det_files)} test(s) to '{target_branch}' on {remote_url}")
+            print("  🧹 Cleaning up local clone...")
+            shutil.rmtree(clone_dir, ignore_errors=True)
         else:
             print("❌ Git push failed. Check SSH access and branch protections.")
             sys.exit(1)
     else:
         print("  ℹ️  Nothing new to commit — tests are already up to date.")
+        shutil.rmtree(clone_dir, ignore_errors=True)
 
     print("\n🎉 PIPELINE COMPLETE! Tests are live on the remote repository.")
 
